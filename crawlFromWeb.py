@@ -20,13 +20,14 @@ def fetchFrom(kafka_host):
 
     for msg in consumer:
         user_name = msg.message.value
+        print user_name
         process_twitter_account(user_name.strip(), producer)
 
     kafka.close()
 
 def persist_data(data, producer):
     try:
-        producer.send_messages("crawl.twitter.seeds.0520", data)
+        producer.send_messages("crawl.twitter.pages.0520", data)
     except MessageSizeTooLargeError as err:
         logging.warning(err)
 
@@ -43,7 +44,6 @@ def get_html(url):
             time.sleep(600)
         except Exception as e:
             print logging.error(e)
-            time.sleep(600)
 
 
 def process_twitter_account(user_name, producer):
@@ -80,6 +80,3 @@ if __name__ == '__main__':
 
     kafka_host = "172.31.10.154:9092"
     fetchFrom(kafka_host)
-with open("twitter_account.txt") as file:
-    for user_name in file:
-        process_twitter_account(user_name.strip())
