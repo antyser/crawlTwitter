@@ -16,6 +16,7 @@ def fetchFrom(kafka_host):
     producer = SimpleProducer(kafka)
 
     for msg in consumer:
+        print msg.message.value
         seed = json.loads(msg.message.value)
         process_twitter_account(seed, producer)
 
@@ -47,7 +48,7 @@ def process_twitter_account(seed, producer):
     html_content = get_html(seed['url'])
     if html_content == None:
         return
-    tree = html.tostring(html_content)
+    tree = html.fromstring(html_content)
     result = tree.xpath("//div[@class='StreamItem js-stream-item']")
     for tweet in result:
         data = dict()
