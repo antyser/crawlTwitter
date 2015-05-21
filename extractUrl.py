@@ -28,6 +28,7 @@ def parse_html(url, producer):
         response = requests.get(QUERY_URL+url, headers=HEADERS)
         if response.status_code != requests.codes.ok:
             logging.warning(str(response.status_code)+'\t'+ response.reason)
+            return
         json_obj = json.loads(response.text)
         url_destination = json_obj['long-url']
         data['domain'] = urlparse(url_destination).netloc
