@@ -6,12 +6,9 @@ import time
 import logging
 import json
 from kafka import SimpleProducer, KafkaClient, SimpleConsumer
-import sys
 from kafka.common import MessageSizeTooLargeError
 
-INITIAL_URL = "https://twitter.com/{0}"
 CONTINUE_URL = "https://twitter.com/i/profiles/show/{0}/timeline?contextual_tweet_id={1}&include_available_features=1&include_entities=1&max_position={1}"
-logging.basicConfig(filename='/tmp/twitter.log',level=logging.DEBUG)
 
 def fetchFrom(kafka_host):
     kafka = KafkaClient(kafka_host)
@@ -19,9 +16,8 @@ def fetchFrom(kafka_host):
     producer = SimpleProducer(kafka)
 
     for msg in consumer:
-        user_name = msg.message.value
-        print user_name
-        process_twitter_account(user_name.strip(), producer)
+        seed = json.loads(msg.message.value)
+        process_twitter_account(seed, producer)
 
     kafka.close()
 
@@ -44,38 +40,42 @@ def get_html(url):
             time.sleep(600)
         except Exception as e:
             print logging.error(e)
+            return None
 
 
-def process_twitter_account(user_name, producer):
-    text = get_html(INITIAL_URL.format(user_name))
-    tree = html.fromstring(text)
-    grid_item_line = tree.xpath("//div[@class='GridTimeline-items']")
-    max_tweet_id = grid_item_line[0].attrib['data-min-position']
+def process_twitter_account(seed, producer):
+    html_content = get_html(seed['url'])
+    if html_content == None:
+        return
+    tree = html.tostring(html_content)
     result = tree.xpath("//div[@class='StreamItem js-stream-item']")
     for tweet in result:
         data = dict()
-        data['id'] = tweet.attrib['data-item-id']
-        data['raw'] = tostring(tweet)
+        data['twitter_id'] = tweet.attrib['data-item-id']
+        data['data'] = tostring(tweet)
+        data['seed'] = seed['url']
         persist_data(json.dumps(data), producer)
+    #grid_item_line = tree.xpath("//div[@class='GridTimeline-items']")
+    #max_tweet_id = grid_item_line[0].attrib['data-min-position']
 
-    for i in range(0, 0):
-        json_text = get_html(CONTINUE_URL.format(user_name, max_tweet_id))
-        addtion_data = json.loads(json_text)
-        tree = html.fromstring(addtion_data['items_html'])
-        result = tree.xpath("//div[@class='StreamItem js-stream-item']")
-        for tweet in result:
-            data = dict()
-            data['id'] = tweet.attrib['data-item-id']
-            data['raw'] = tostring(tweet)
-            persist_data(json.dumps(data), producer)
-        if not addtion_data['has_more_items']:
-            logging.info("no more items")
-            break
-        max_tweet_id = addtion_data['min_position']
-        time.sleep(5)
+
+    #for i in range(0, 0):
+    #    json_text = get_html(CONTINUE_URL.format(user_name, max_tweet_id))
+    #    addtion_data = json.loads(json_text)
+    #    tree = html.fromstring(addtion_data['items_html'])
+    #    result = tree.xpath("//div[@class='StreamItem js-stream-item']")
+    #    for tweet in result:
+    #        data = dict()
+    #        data['id'] = tweet.attrib['data-item-id']
+    #        data['raw'] = tostring(tweet)
+    #       persist_data(json.dumps(data), producer)
+    #    if not addtion_data['has_more_items']:
+    #        logging.info("no more items")
+    #        break
+    #    max_tweet_id = addtion_data['min_position']
+    #    time.sleep(5)
 
 if __name__ == '__main__':
-    print 'USAGE:  python fetchReddit.py KAFKA_HOST:PORT'
     logging.basicConfig(file='fetch.log', level=logging.INFO)
 
     kafka_host = "172.31.10.154:9092"
