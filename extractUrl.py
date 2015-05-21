@@ -59,7 +59,7 @@ def consume(kafka_host):
     kafka = KafkaClient(kafka_host)
     consumer = SimpleConsumer(kafka, 'fetcher', PAGES_TOPIC)
     producer = SimpleProducer(kafka)
-
+    consumer.max_buffer_size=20*1024*1024
     for msg in consumer:
         page = json.loads(msg.message.value)
         process(page, producer)
