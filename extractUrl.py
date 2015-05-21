@@ -26,6 +26,6 @@ def fetchFrom(kafka_host):
 if __name__ == '__main__':
     logging.basicConfig(file='fetch.log', level=logging.INFO)
 
-    kafka_host = sys.argv[1]
+    kafka_host = "172.31.10.154:9092"
 
     fetchFrom(kafka_host)
