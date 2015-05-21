@@ -26,16 +26,16 @@ def parse_html(url, producer):
     for url in result:
         data = dict()
         response = requests.get(QUERY_URL+url, headers=HEADERS)
-        time.sleep(6)
         if response.status_code != requests.codes.ok:
             logging.warning(str(response.status_code)+'\t'+ response.reason)
-        json_obj = json.dumps(response.text)
+        json_obj = json.loads(response.text)
         url_destination = json_obj['long-url']
         data['domain'] = urlparse(url_destination).netloc
         data['url'] = url_destination
         data['score'] = 1
         print data
         persist_data(json.dumps(data), producer)
+        time.sleep(6)
 
 
 def fetchFrom(kafka_host):
