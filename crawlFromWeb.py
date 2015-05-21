@@ -56,6 +56,7 @@ def process_twitter_account(seed, producer):
         data['twitter_id'] = tweet.attrib['data-item-id']
         data['data'] = tostring(tweet)
         data['seed'] = seed['url']
+        data['download_timestamp'] = time.time()
         persist_data(json.dumps(data), producer)
     #grid_item_line = tree.xpath("//div[@class='GridTimeline-items']")
     #max_tweet_id = grid_item_line[0].attrib['data-min-position']

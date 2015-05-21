@@ -48,6 +48,8 @@ def process(data, producer):
         output['domain'] = urlparse(url_destination).netloc
         output['url'] = url_destination
         output['score'] = 1
+        if 'download_timestamp' in data:
+            output['download_timestamp'] = data['download_timestamp']
         print output
         produce(json.dumps(output), producer, LINKS_TOPIC)
         time.sleep(6)
@@ -65,6 +67,6 @@ def consume(kafka_host):
 
 
 if __name__ == '__main__':
-    logging.basicConfig(file='fetch.log', level=logging.INFO)
+    logging.basicConfig(file='extract.log', level=logging.INFO)
     kafka_host = "172.31.10.154:9092"
     consume(kafka_host)
