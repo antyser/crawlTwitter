@@ -10,7 +10,7 @@ from kafka import SimpleProducer, KafkaClient, SimpleConsumer
 from kafka.common import MessageSizeTooLargeError
 
 HEADERS = {'User-agent': 'Mozilla/5.0'}
-
+QUERY_URL = "http://api.longurl.org/v2/expand?format=json&url="
 
 def persist_data(data, producer):
     try:
@@ -25,11 +25,11 @@ def parse_html(url, producer):
         "//div[@class='StreamItem js-stream-item']/div/div[2]/p//a[@class='twitter-timeline-link']/@href")
     for url in result:
         data = dict()
-        response = requests.get(url, headers=HEADERS)
+        response = requests.get(QUERY_URL+url, headers=HEADERS)
         time.sleep(6)
         if response.status_code != requests.codes.ok:
             logging.warning(str(response.status_code)+'\t'+ response.reason)
-        url_destination = response.url
+        url_destination = json.dumps(response.text)['long-url']
         data['domain'] = urlparse(url_destination).netloc
         data['url'] = url_destination
         data['score'] = 1
