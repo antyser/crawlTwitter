@@ -29,7 +29,8 @@ def parse_html(url, producer):
         time.sleep(6)
         if response.status_code != requests.codes.ok:
             logging.warning(str(response.status_code)+'\t'+ response.reason)
-        url_destination = json.dumps(response.text)['long-url']
+        json_obj = json.dumps(response.text)
+        url_destination = json_obj['long-url']
         data['domain'] = urlparse(url_destination).netloc
         data['url'] = url_destination
         data['score'] = 1
