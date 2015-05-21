@@ -19,7 +19,8 @@ def parse_html(url, producer):
     result = tree.xpath("//div[@class='StreamItem js-stream-item']/div/div[2]/p//a[@class='twitter-timeline-link']/@href")
     for url in result:
         data = dict()
-        response = urllib2.urlopen(url)
+        req = urllib2.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+        response = urllib2.urlopen(req)
         url_destination = response.url
         data['domain'] = urlparse(url_destination).netloc
         data['url'] = url_destination
@@ -38,13 +39,10 @@ def fetchFrom(kafka_host):
         page = json.loads(msg.message.value)
         url = page['data']
         parse_html(url, producer)
-
     kafka.close()
 
 
 if __name__ == '__main__':
     logging.basicConfig(file='fetch.log', level=logging.INFO)
-
     kafka_host = "172.31.10.154:9092"
-
     fetchFrom(kafka_host)
