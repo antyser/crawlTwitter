@@ -5,6 +5,7 @@ import sys
 import urllib2
 from lxml import html
 from urlparse import urlparse
+import time
 from kafka import SimpleProducer, KafkaClient, SimpleConsumer
 from kafka.common import MessageSizeTooLargeError
 
@@ -21,6 +22,7 @@ def parse_html(url, producer):
         data = dict()
         req = urllib2.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
         response = urllib2.urlopen(req)
+        time.sleep(6)
         url_destination = response.url
         data['domain'] = urlparse(url_destination).netloc
         data['url'] = url_destination
