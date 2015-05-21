@@ -2,14 +2,32 @@ __author__ = 'junliu'
 import json
 import logging
 import sys
+import urllib2
 from lxml import html
+from urlparse import urlparse
 from kafka import SimpleProducer, KafkaClient, SimpleConsumer
+from kafka.common import MessageSizeTooLargeError
 
+def persist_data(data, producer):
+    try:
+        producer.send_messages("crawl.twitter.links.0520", data)
+    except MessageSizeTooLargeError as err:
+        logging.warning(err)
 
-def parse_html(url):
+def parse_html(url, producer):
     tree = html.fromstring(url)
     result = tree.xpath("//div[@class='StreamItem js-stream-item']/div/div[2]/p//a[@class='twitter-timeline-link']/@href")
-    print(result)
+    for url in result:
+        data = dict()
+        response = urllib2.urlopen(url)
+        url_destination = response.url
+        data['domain'] = urlparse(url_destination).netloc
+        data['url'] = url_destination
+        data['score'] = 1
+        print data
+        persist_data(json.dumps(data), producer)
+
+
 
 def fetchFrom(kafka_host):
     kafka = KafkaClient(kafka_host)
@@ -17,10 +35,9 @@ def fetchFrom(kafka_host):
     producer = SimpleProducer(kafka)
 
     for msg in consumer:
-        print msg.message.value
         page = json.loads(msg.message.value)
         url = page['data']
-        parse_html(url)
+        parse_html(url, producer)
 
     kafka.close()
 
