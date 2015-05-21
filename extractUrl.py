@@ -5,9 +5,12 @@ import sys
 import urllib2
 from lxml import html
 from urlparse import urlparse
-import time
+import time, requests
 from kafka import SimpleProducer, KafkaClient, SimpleConsumer
 from kafka.common import MessageSizeTooLargeError
+
+HEADERS = {'User-agent': 'Mozilla/5.0'}
+
 
 def persist_data(data, producer):
     try:
@@ -15,21 +18,23 @@ def persist_data(data, producer):
     except MessageSizeTooLargeError as err:
         logging.warning(err)
 
+
 def parse_html(url, producer):
     tree = html.fromstring(url)
-    result = tree.xpath("//div[@class='StreamItem js-stream-item']/div/div[2]/p//a[@class='twitter-timeline-link']/@href")
+    result = tree.xpath(
+        "//div[@class='StreamItem js-stream-item']/div/div[2]/p//a[@class='twitter-timeline-link']/@href")
     for url in result:
         data = dict()
-        req = urllib2.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
-        response = urllib2.urlopen(req)
+        response = requests.get(url, headers=HEADERS)
         time.sleep(6)
+        if response.status_code != requests.codes.ok:
+            logging.warning(str(response.status_code)+'\t'+ response.reason)
         url_destination = response.url
         data['domain'] = urlparse(url_destination).netloc
         data['url'] = url_destination
         data['score'] = 1
         print data
         persist_data(json.dumps(data), producer)
-
 
 
 def fetchFrom(kafka_host):
