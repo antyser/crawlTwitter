@@ -2,12 +2,14 @@ __author__ = 'junliu'
 import json
 import logging
 import sys
+from lxml import html
 from kafka import SimpleProducer, KafkaClient, SimpleConsumer
 
 
 def parse_html(url):
-    pass
-
+    tree = html.fromstring(url)
+    result = tree.xpath("//div[@class='StreamItem js-stream-item']/div/div[2]/p//a[@class='twitter-timeline-link']/@href")
+    print(result)
 
 def fetchFrom(kafka_host):
     kafka = KafkaClient(kafka_host)
@@ -17,7 +19,7 @@ def fetchFrom(kafka_host):
     for msg in consumer:
         print msg.message.value
         page = json.loads(msg.message.value)
-        url = page['url']
+        url = page['data']
         parse_html(url)
 
     kafka.close()
