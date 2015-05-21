@@ -52,7 +52,7 @@ def process(data, producer):
             output['download_timestamp'] = data['download_timestamp']
         print output
         produce(json.dumps(output), producer, LINKS_TOPIC)
-        time.sleep(6)
+        time.sleep(3)
 
 
 def consume(kafka_host):
