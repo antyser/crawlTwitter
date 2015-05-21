@@ -2,7 +2,7 @@ __author__ = 'junliu'
 import json
 import logging
 import sys
-import urllib2
+import urllib
 from lxml import html
 from urlparse import urlparse
 import time, requests
@@ -11,47 +11,60 @@ from kafka.common import MessageSizeTooLargeError
 
 HEADERS = {'User-agent': 'Mozilla/5.0'}
 QUERY_URL = "http://api.longurl.org/v2/expand?format=json&url="
+PAGES_TOPIC = 'crawl.twitter.pages.0520'
+LINKS_TOPIC = "crawl.twitter.links.0520"
 
-def persist_data(data, producer):
+
+
+def produce(data, producer, topic):
     try:
-        producer.send_messages("crawl.twitter.links.0520", data)
+        producer.send_messages(topic, data)
     except MessageSizeTooLargeError as err:
         logging.warning(err)
 
-
-def parse_html(url, producer):
+    #data {"seed": , "data": , "try"}
+def process(data, producer):
+    if 'try' in data and data['try'] >= 3:
+        logging.info("too many retries, dump the url: " + data['data'])
+        return
+    url = data['data']
     tree = html.fromstring(url)
     result = tree.xpath(
         "//div[@class='StreamItem js-stream-item']/div/div[2]/p//a[@class='twitter-timeline-link']/@href")
     for url in result:
-        data = dict()
+        output = dict()
         response = requests.get(QUERY_URL+url, headers=HEADERS)
         if response.status_code != requests.codes.ok:
             logging.warning(str(response.status_code)+'\t'+ response.reason)
+            if not 'try' in data:
+                data['try'] = 1
+            else:
+                data['try'] += 1
+            print data
+            produce(json.dumps(data), producer, PAGES_TOPIC)
             return
         json_obj = json.loads(response.text)
         url_destination = json_obj['long-url']
-        data['domain'] = urlparse(url_destination).netloc
-        data['url'] = url_destination
-        data['score'] = 1
-        print data
-        persist_data(json.dumps(data), producer)
+        output['domain'] = urlparse(url_destination).netloc
+        output['url'] = url_destination
+        output['score'] = 1
+        print output
+        produce(json.dumps(output), producer, LINKS_TOPIC)
         time.sleep(6)
 
 
-def fetchFrom(kafka_host):
+def consume(kafka_host):
     kafka = KafkaClient(kafka_host)
-    consumer = SimpleConsumer(kafka, 'fetcher', 'crawl.twitter.pages.0520')
+    consumer = SimpleConsumer(kafka, 'fetcher', PAGES_TOPIC)
     producer = SimpleProducer(kafka)
 
     for msg in consumer:
         page = json.loads(msg.message.value)
-        url = page['data']
-        parse_html(url, producer)
+        process(page, producer)
     kafka.close()
 
 
 if __name__ == '__main__':
     logging.basicConfig(file='fetch.log', level=logging.INFO)
     kafka_host = "172.31.10.154:9092"
-    fetchFrom(kafka_host)
+    consume(kafka_host)
