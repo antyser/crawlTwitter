@@ -3,6 +3,7 @@ import json
 from tweepy.streaming import StreamListener
 from tweepy import OAuthHandler
 from tweepy import Stream
+import time
 from kafka import SimpleProducer, KafkaClient
 
 #consumer_key="0QYtYUshr2SiccZL8zbMdq8uW"
@@ -24,7 +25,9 @@ producer = SimpleProducer(kafka)
 class StdOutListener(StreamListener):
 
     def on_data(self, data):
-        producer.send_messages(API_TOPIC, data.encode('utf-8'))
+        json_obj = json.loads(data)
+        json_obj['download_timestamp'] = time.time()
+        producer.send_messages(API_TOPIC, json_obj.encode('utf-8'))
         return True
 
     def on_error(self, status):
