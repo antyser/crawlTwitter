@@ -24,7 +24,7 @@ producer = SimpleProducer(kafka)
 class StdOutListener(StreamListener):
 
     def on_data(self, data):
-        producer.send_messages(API_TOPIC, data)
+        producer.send_messages(API_TOPIC, data.encode('utf-8'))
         return True
 
     def on_error(self, status):
