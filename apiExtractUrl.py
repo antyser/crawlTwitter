@@ -19,7 +19,8 @@ def produce(data, producer, topic):
         logging.warning(err)
 
 def process(data, producer):
-    data = json.loads(data)
+    if not 'entities' in data:
+        return
     urls = data['entities']['urls']
     for url in urls:
         output = dict()
