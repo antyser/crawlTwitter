@@ -7,8 +7,8 @@ from kafka.common import MessageSizeTooLargeError
 
 HEADERS = {'User-agent': 'Mozilla/5.0'}
 QUERY_URL = "http://api.longurl.org/v2/expand?format=json&url="
-PAGES_TOPIC = 'api.twitter.pages.0520'
-LINKS_TOPIC = "api.twitter.links.0520"
+PAGES_TOPIC = 'api.twitter.pages.0522'
+LINKS_TOPIC = "api.twitter.links.0522"
 
 
 
