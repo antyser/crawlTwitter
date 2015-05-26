@@ -19,7 +19,7 @@ def fetchFrom(kafka_host):
         print msg.message.value
         seed = json.loads(msg.message.value)
         process_twitter_account(seed, producer)
-        time.sleep(3)
+        time.sleep(2)
 
     kafka.close()
 

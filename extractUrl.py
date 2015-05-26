@@ -24,35 +24,38 @@ def produce(data, producer, topic):
 
     #data {"seed": , "data": , "try"}
 def process(data, producer):
-    if 'try' in data and data['try'] >= 3:
-        logging.info("too many retries, dump the url: " + data['data'])
-        return
-    url = data['data']
-    tree = html.fromstring(url)
-    result = tree.xpath(
-        "//div[@class='StreamItem js-stream-item']/div/div[2]/p//a[@class='twitter-timeline-link']/@href")
-    for url in result:
-        output = dict()
-        response = requests.get(QUERY_URL+url, headers=HEADERS)
-        if response.status_code != requests.codes.ok:
-            logging.warning(str(response.status_code)+'\t'+ response.reason)
-            if not 'try' in data:
-                data['try'] = 1
-            else:
-                data['try'] += 1
-            print data
-            produce(json.dumps(data), producer, PAGES_TOPIC)
+    try:
+        if 'try' in data and data['try'] >= 3:
+            logging.info("too many retries, dump the url: " + data['data'])
             return
-        json_obj = json.loads(response.text)
-        url_destination = json_obj['long-url']
-        output['domain'] = urlparse(url_destination).netloc
-        output['url'] = url_destination
-        output['score'] = 1
-        if 'download_timestamp' in data:
-            output['download_timestamp'] = data['download_timestamp']
-        print output
-        produce(json.dumps(output), producer, LINKS_TOPIC)
-        time.sleep(3)
+        url = data['data']
+        tree = html.fromstring(url)
+        result = tree.xpath(
+            "//div[@class='StreamItem js-stream-item']/div/div[2]/p//a[@class='twitter-timeline-link']/@href")
+        for url in result:
+            output = dict()
+            response = requests.get(QUERY_URL+url, headers=HEADERS)
+            if response.status_code != requests.codes.ok:
+                logging.warning(str(response.status_code)+'\t'+ response.reason)
+                if not 'try' in data:
+                    data['try'] = 1
+                else:
+                    data['try'] += 1
+                print data
+                produce(json.dumps(data), producer, PAGES_TOPIC)
+                return
+            json_obj = json.loads(response.text)
+            url_destination = json_obj['long-url']
+            output['domain'] = urlparse(url_destination).netloc
+            output['url'] = url_destination
+            output['score'] = 1
+            if 'download_timestamp' in data:
+                output['download_timestamp'] = data['download_timestamp']
+            print output
+            produce(json.dumps(output), producer, LINKS_TOPIC)
+            time.sleep(2)
+    except Exception as err:
+        logging.error(err)
 
 
 def consume(kafka_host):
