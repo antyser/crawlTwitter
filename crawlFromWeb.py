@@ -5,6 +5,7 @@ import httplib
 import time
 import logging
 import json
+import sys
 from kafka import SimpleProducer, KafkaClient, SimpleConsumer
 from kafka.common import MessageSizeTooLargeError
 
@@ -80,6 +81,7 @@ def process_twitter_account(seed, producer):
 
 if __name__ == '__main__':
     logging.basicConfig(file='fetch.log', level=logging.INFO)
-
     kafka_host = "172.31.10.154:9092"
+    if len(sys.argv) == 2:
+        kafka_host = sys.argv[1]
     fetchFrom(kafka_host)

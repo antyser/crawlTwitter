@@ -72,4 +72,6 @@ def consume(kafka_host):
 if __name__ == '__main__':
     logging.basicConfig(file='extract.log', level=logging.INFO)
     kafka_host = "172.31.10.154:9092"
+    if len(sys.argv) == 2:
+        kafka_host = sys.argv[1]
     consume(kafka_host)
