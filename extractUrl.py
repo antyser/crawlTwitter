@@ -70,6 +70,7 @@ def consume(kafka_host):
 
 
 if __name__ == '__main__':
+    print 'usage: python extractUrl.py <kafka-host:port>'
     logging.basicConfig(file='extract.log', level=logging.INFO)
     kafka_host = "172.31.10.154:9092"
     if len(sys.argv) == 2:

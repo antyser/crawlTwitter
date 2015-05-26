@@ -5,6 +5,7 @@ import sys
 
 
 if __name__ == '__main__':
+    print 'usage: python genSeeds.py <kafka-host:port>'
     kafka_host = '172.31.10.154:9092'
     if len(sys.argv) == 2:
         kafka_host = sys.argv[1]

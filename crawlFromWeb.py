@@ -80,6 +80,7 @@ def process_twitter_account(seed, producer):
     #    time.sleep(5)
 
 if __name__ == '__main__':
+    print 'usage: python crawlFromWeb.py <kafka-host:port>'
     logging.basicConfig(file='fetch.log', level=logging.INFO)
     kafka_host = "172.31.10.154:9092"
     if len(sys.argv) == 2:
