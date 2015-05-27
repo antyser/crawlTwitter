@@ -10,10 +10,17 @@ from kafka import SimpleProducer, KafkaClient, SimpleConsumer
 from kafka.common import MessageSizeTooLargeError
 
 CONTINUE_URL = "https://twitter.com/i/profiles/show/{0}/timeline?contextual_tweet_id={1}&include_available_features=1&include_entities=1&max_position={1}"
+cfg = load_config()
+
+
+def load_config():
+    with open('config.yml', 'r') as fl:
+        cnf = yaml.load(fl)
+        return cnf
 
 def fetchFrom(kafka_host):
     kafka = KafkaClient(kafka_host)
-    consumer = SimpleConsumer(kafka, 'fetcher', 'crawl.twitter.seeds.0520')
+    consumer = SimpleConsumer(kafka, 'fetcher', cfg['kafka']['seeds'])
     producer = SimpleProducer(kafka)
 
     for msg in consumer:
@@ -26,7 +33,7 @@ def fetchFrom(kafka_host):
 
 def persist_data(data, producer):
     try:
-        producer.send_messages("crawl.twitter.pages.0520", data)
+        producer.send_messages(cfg['kafka']['pages'], data)
     except MessageSizeTooLargeError as err:
         logging.warning(err)
 

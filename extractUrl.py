@@ -11,10 +11,14 @@ from kafka.common import MessageSizeTooLargeError
 
 HEADERS = {'User-agent': 'Mozilla/5.0'}
 QUERY_URL = "http://api.longurl.org/v2/expand?format=json&url="
-PAGES_TOPIC = 'crawl.twitter.pages.0520'
-LINKS_TOPIC = "crawl.twitter.links.0520"
+cfg = load_config()
+PAGES_TOPIC = cfg['kafka']['pages']
+LINKS_TOPIC = cfg['kafka']['links']
 
-
+def load_config():
+    with open('config.yml', 'r') as fl:
+        cnf = yaml.load(fl)
+        return cnf
 
 def produce(data, producer, topic):
     try:
@@ -67,7 +71,6 @@ def consume(kafka_host):
         page = json.loads(msg.message.value)
         process(page, producer)
     kafka.close()
-
 
 if __name__ == '__main__':
     print 'usage: python extractUrl.py <kafka-host:port>'
