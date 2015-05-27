@@ -2,4 +2,4 @@ lxml
 requests
 kafka-python
 tweepy
-yaml
+pyyaml
