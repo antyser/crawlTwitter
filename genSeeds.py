@@ -15,7 +15,7 @@ if __name__ == '__main__':
     kafka_host = '172.31.10.154:9092'
     if len(sys.argv) == 2:
         kafka_host = sys.argv[1]
-    kafka = KafkaClient()
+    kafka = KafkaClient(kafka_host)
     cfg = load_config()
     producer = SimpleProducer(kafka)
     print 'connected to kafka, start populating seeds'
