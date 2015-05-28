@@ -1,5 +1,5 @@
 lxml
 requests
-kafka-python
+pykafka
 tweepy
 pyyaml

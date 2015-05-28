@@ -6,10 +6,8 @@ import time
 import logging
 import json
 import sys
-from kafka import SimpleProducer, KafkaClient, SimpleConsumer
-from kafka.common import MessageSizeTooLargeError
 import yaml
-
+import kafkaUtil
 CONTINUE_URL = "https://twitter.com/i/profiles/show/{0}/timeline?contextual_tweet_id={1}&include_available_features=1&include_entities=1&max_position={1}"
 
 def load_config():
@@ -18,22 +16,22 @@ def load_config():
         return cnf
 
 def consume(kafka_host, cfg):
-    kafka = KafkaClient(kafka_host)
-    consumer = SimpleConsumer(kafka, 'fetcher', cfg['kafka']['seeds'])
-    producer = SimpleProducer(kafka)
-
-    for msg in consumer:
-        print msg.message.value
-        seed = json.loads(msg.message.value)
-        process_twitter_account(seed, producer, cfg)
+    consumer = kafkaUtil.create_consumer(kafka_host, cfg['zookeeper'], cfg['kafka']['seeds'], 'fetcher')
+    producer = kafkaUtil.create_producer(kafka_host, cfg['kafka']['pages'])
+    print "start consuming"
+    while True:
+        msg = consumer.consume()
+        if msg is None:
+            continue
+        print "input:", msg.offset, msg.value
+        seed = json.loads(msg.value)
+        process(seed, producer, cfg)
         time.sleep(2)
 
-    kafka.close()
-
-def produce(data, producer, topic):
+def produce(data, producer):
     try:
-        producer.send_messages(topic, data)
-    except MessageSizeTooLargeError as err:
+        producer.produce([data])
+    except Exception as err:
         logging.warning(err)
 
 def get_html(url):
@@ -51,19 +49,24 @@ def get_html(url):
             return None
 
 
-def process_twitter_account(seed, producer, cfg):
+def process(seed, producer, cfg):
     html_content = get_html(seed['url'])
     if html_content == None:
         return
-    tree = html.fromstring(html_content)
-    result = tree.xpath("//div[@class='StreamItem js-stream-item']")
-    for tweet in result:
-        data = dict()
-        data['twitter_id'] = tweet.attrib['data-item-id']
-        data['data'] = tostring(tweet)
-        data['seed'] = seed['url']
-        data['download_timestamp'] = time.time()
-        produce(json.dumps(data), producer, cfg['kafka']['pages'])
+    data = dict()
+    data['data'] = html_content
+    data['seed'] = seed['url']
+    data['download_timestamp'] = time.time()
+    produce(json.dumps(data), producer)
+    # tree = html.fromstring(html_content)
+    # result = tree.xpath("//div[@class='StreamItem js-stream-item']")
+    # for tweet in result:
+    #     data = dict()
+    #     data['twitter_id'] = tweet.attrib['data-item-id']
+    #     data['data'] = tostring(tweet)
+    #     data['seed'] = seed['url']
+    #     data['download_timestamp'] = time.time()
+    #     produce(json.dumps(data), producer)
     #grid_item_line = tree.xpath("//div[@class='GridTimeline-items']")
     #max_tweet_id = grid_item_line[0].attrib['data-min-position']
 

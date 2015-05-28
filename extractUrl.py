@@ -2,73 +2,78 @@ __author__ = 'junliu'
 import json
 import logging
 import sys
-import urllib
 from lxml import html
 from urlparse import urlparse
 import time, requests
-from kafka import SimpleProducer, KafkaClient, SimpleConsumer
-from kafka.common import MessageSizeTooLargeError
 import yaml
+import kafkaUtil
 
 HEADERS = {'User-agent': 'Mozilla/5.0'}
 QUERY_URL = "http://api.longurl.org/v2/expand?format=json&url="
+
 
 def load_config():
     with open('config.yml', 'r') as fl:
         cnf = yaml.load(fl)
         return cnf
 
-def produce(data, producer, topic):
+
+def produce(data, producer):
+    print 'output:', data
     try:
-        producer.send_messages(topic, data)
-    except MessageSizeTooLargeError as err:
+        producer.produce([data])
+    except Exception as err:
         logging.warning(err)
 
-    #data {"seed": , "data": , "try"}
-def process(data, producer, cfg):
+        # data {"seed": , "data": , "try"}
+
+
+def expend_url(url):
+    print 'url:', url
+    response = requests.get(QUERY_URL + url, headers=HEADERS)
+    if response.status_code != requests.codes.ok:
+        logging.warning(str(response.status_code) + '\t' + response.reason)
+        if response.status_code == 404:
+            return None
+        # TODO:should put in failure queue
+        # produce(json.dumps(data), producers['page'])
+        return None
+    json_obj = json.loads(response.text)
+    return json_obj['long-url']
+
+
+def process(data, producers, cfg):
     try:
-        if 'try' in data and data['try'] >= 3:
-            logging.info("too many retries, dump the url: " + data['data'])
-            return
-        url = data['data']
-        tree = html.fromstring(url)
-        result = tree.xpath(
-            "//div[@class='StreamItem js-stream-item']/div/div[2]/p//a[@class='twitter-timeline-link']/@href")
-        for url in result:
-            output = dict()
-            response = requests.get(QUERY_URL+url, headers=HEADERS)
-            if response.status_code != requests.codes.ok:
-                logging.warning(str(response.status_code)+'\t'+ response.reason)
-                if not 'try' in data:
-                    data['try'] = 1
-                else:
-                    data['try'] += 1
-                print data
-                produce(json.dumps(data), producer, cfg['kafka']['pages'])
-                return
-            json_obj = json.loads(response.text)
-            url_destination = json_obj['long-url']
+        content = data['data']
+        tree = html.fromstring(content)
+        result = tree.xpath("//*[@class='content']/p//a[@class='twitter-timeline-link']")
+        for a_tag in result:
+            output = {}
+            tiny_url = a_tag.attrib['href']
+            url_destination = expend_url(tiny_url)
+            print 'expended url:', url_destination
             output['domain'] = urlparse(url_destination).netloc
             output['url'] = url_destination
             output['score'] = 1
-            if 'download_timestamp' in data:
-                output['download_timestamp'] = data['download_timestamp']
-            print output
-            produce(json.dumps(output), producer, cfg['kafka']['links'])
-            time.sleep(2)
+            output['download_timestamp'] = data['download_timestamp']
+            produce(json.dumps(output), producers['links'])
     except Exception as err:
         logging.error(err)
 
 
 def consume(kafka_host, cfg):
-    kafka = KafkaClient(kafka_host)
-    consumer = SimpleConsumer(kafka, 'fetcher', cfg['kafka']['pages'])
-    producer = SimpleProducer(kafka)
-    consumer.max_buffer_size=20*1024*1024
-    for msg in consumer:
-        page = json.loads(msg.message.value)
-        process(page, producer, cfg)
-    kafka.close()
+    consumer = kafkaUtil.create_consumer(kafka_host, cfg['zookeeper'], cfg['kafka']['pages'], 'fetcher')
+    link_producer = kafkaUtil.create_producer(kafka_host, cfg['kafka']['links'])
+    page_producer = kafkaUtil.create_producer(kafka_host, cfg['kafka']['pages'])
+    producers = {'links': link_producer, 'pages': page_producer}
+    while True:
+        msg = consumer.consume()
+        if msg is None:
+            continue
+        page = json.loads(msg.value)
+        process(page, producers, cfg)
+        time.sleep(2)
+
 
 if __name__ == '__main__':
     print 'usage: python extractUrl.py <kafka-host:port>'
