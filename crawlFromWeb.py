@@ -8,6 +8,7 @@ import json
 import sys
 from kafka import SimpleProducer, KafkaClient, SimpleConsumer
 from kafka.common import MessageSizeTooLargeError
+import yaml
 
 CONTINUE_URL = "https://twitter.com/i/profiles/show/{0}/timeline?contextual_tweet_id={1}&include_available_features=1&include_entities=1&max_position={1}"
 

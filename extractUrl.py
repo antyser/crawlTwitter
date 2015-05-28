@@ -8,6 +8,7 @@ from urlparse import urlparse
 import time, requests
 from kafka import SimpleProducer, KafkaClient, SimpleConsumer
 from kafka.common import MessageSizeTooLargeError
+import yaml
 
 HEADERS = {'User-agent': 'Mozilla/5.0'}
 QUERY_URL = "http://api.longurl.org/v2/expand?format=json&url="
