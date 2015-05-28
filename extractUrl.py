@@ -11,9 +11,6 @@ from kafka.common import MessageSizeTooLargeError
 
 HEADERS = {'User-agent': 'Mozilla/5.0'}
 QUERY_URL = "http://api.longurl.org/v2/expand?format=json&url="
-cfg = load_config()
-PAGES_TOPIC = cfg['kafka']['pages']
-LINKS_TOPIC = cfg['kafka']['links']
 
 def load_config():
     with open('config.yml', 'r') as fl:
@@ -27,7 +24,7 @@ def produce(data, producer, topic):
         logging.warning(err)
 
     #data {"seed": , "data": , "try"}
-def process(data, producer):
+def process(data, producer, cfg):
     try:
         if 'try' in data and data['try'] >= 3:
             logging.info("too many retries, dump the url: " + data['data'])
@@ -46,7 +43,7 @@ def process(data, producer):
                 else:
                     data['try'] += 1
                 print data
-                produce(json.dumps(data), producer, PAGES_TOPIC)
+                produce(json.dumps(data), producer, cfg['kafka']['pages'])
                 return
             json_obj = json.loads(response.text)
             url_destination = json_obj['long-url']
@@ -56,20 +53,20 @@ def process(data, producer):
             if 'download_timestamp' in data:
                 output['download_timestamp'] = data['download_timestamp']
             print output
-            produce(json.dumps(output), producer, LINKS_TOPIC)
+            produce(json.dumps(output), producer, cfg['kafka']['links'])
             time.sleep(2)
     except Exception as err:
         logging.error(err)
 
 
-def consume(kafka_host):
+def consume(kafka_host, cfg):
     kafka = KafkaClient(kafka_host)
-    consumer = SimpleConsumer(kafka, 'fetcher', PAGES_TOPIC)
+    consumer = SimpleConsumer(kafka, 'fetcher', cfg['kafka']['pages'])
     producer = SimpleProducer(kafka)
     consumer.max_buffer_size=20*1024*1024
     for msg in consumer:
         page = json.loads(msg.message.value)
-        process(page, producer)
+        process(page, producer, cfg)
     kafka.close()
 
 if __name__ == '__main__':
@@ -78,4 +75,5 @@ if __name__ == '__main__':
     kafka_host = "172.31.10.154:9092"
     if len(sys.argv) == 2:
         kafka_host = sys.argv[1]
-    consume(kafka_host)
+    cfg = load_config()
+    consume(kafka_host, cfg)

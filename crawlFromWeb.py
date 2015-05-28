@@ -10,15 +10,13 @@ from kafka import SimpleProducer, KafkaClient, SimpleConsumer
 from kafka.common import MessageSizeTooLargeError
 
 CONTINUE_URL = "https://twitter.com/i/profiles/show/{0}/timeline?contextual_tweet_id={1}&include_available_features=1&include_entities=1&max_position={1}"
-cfg = load_config()
-
 
 def load_config():
     with open('config.yml', 'r') as fl:
         cnf = yaml.load(fl)
         return cnf
 
-def fetchFrom(kafka_host):
+def consume(kafka_host, cfg):
     kafka = KafkaClient(kafka_host)
     consumer = SimpleConsumer(kafka, 'fetcher', cfg['kafka']['seeds'])
     producer = SimpleProducer(kafka)
@@ -26,17 +24,16 @@ def fetchFrom(kafka_host):
     for msg in consumer:
         print msg.message.value
         seed = json.loads(msg.message.value)
-        process_twitter_account(seed, producer)
+        process_twitter_account(seed, producer, cfg)
         time.sleep(2)
 
     kafka.close()
 
-def persist_data(data, producer):
+def produce(data, producer, topic):
     try:
-        producer.send_messages(cfg['kafka']['pages'], data)
+        producer.send_messages(topic, data)
     except MessageSizeTooLargeError as err:
         logging.warning(err)
-
 
 def get_html(url):
     logging.debug("requesting " + url)
@@ -53,7 +50,7 @@ def get_html(url):
             return None
 
 
-def process_twitter_account(seed, producer):
+def process_twitter_account(seed, producer, cfg):
     html_content = get_html(seed['url'])
     if html_content == None:
         return
@@ -65,7 +62,7 @@ def process_twitter_account(seed, producer):
         data['data'] = tostring(tweet)
         data['seed'] = seed['url']
         data['download_timestamp'] = time.time()
-        persist_data(json.dumps(data), producer)
+        produce(json.dumps(data), producer, cfg['kafka']['pages'])
     #grid_item_line = tree.xpath("//div[@class='GridTimeline-items']")
     #max_tweet_id = grid_item_line[0].attrib['data-min-position']
 
@@ -92,4 +89,5 @@ if __name__ == '__main__':
     kafka_host = "172.31.10.154:9092"
     if len(sys.argv) == 2:
         kafka_host = sys.argv[1]
-    fetchFrom(kafka_host)
+    cfg = load_config()
+    consume(kafka_host, cfg)

@@ -8,7 +8,7 @@ from kafka.common import MessageSizeTooLargeError
 HEADERS = {'User-agent': 'Mozilla/5.0'}
 QUERY_URL = "http://api.longurl.org/v2/expand?format=json&url="
 PAGES_TOPIC = 'api.twitter.pages.0522'
-LINKS_TOPIC = "api.twitter.links.0522"
+cfg['kafka']['links'] = "api.twitter.links.0522"
 
 
 
@@ -31,11 +31,11 @@ def process(data, producer):
         if 'download_timestamp' in data:
             output['download_timestamp'] = data['download_timestamp']
         print output
-        produce(json.dumps(output), producer, LINKS_TOPIC)
+        produce(json.dumps(output), producer, cfg['kafka']['links'])
 
 def consume(kafka_host):
     kafka = KafkaClient(kafka_host)
-    consumer = SimpleConsumer(kafka, 'fetcher', PAGES_TOPIC)
+    consumer = SimpleConsumer(kafka, 'fetcher', cfg['kafka']['pages'])
     producer = SimpleProducer(kafka)
     consumer.max_buffer_size=20*1024*1024
     for msg in consumer:
