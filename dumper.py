@@ -10,7 +10,7 @@ def consume(kafka_host, topic, filename):
             msg = consumer.consume()
             if msg is None:
                 continue
-            out.write(msg)
+            out.write(msg.value)
             out.write('\n')
 
 
