@@ -1,9 +1,9 @@
 kafka:
   address: 172.31.10.154:9092
-  seeds: twitter.top20.seeds.1
-  pages: twitter.top20.pages
-  links: twitter.top20.links
-  fails: twitter.top20.fails
+  seeds: twitter.top20.seeds.0530
+  pages: twitter.top20.pages.0530
+  links: twitter.top20.links.0530
+  fails: twitter.top20.fails.0530
   consume_group: fetcher1
 
 seed_list: top20_account.txt
