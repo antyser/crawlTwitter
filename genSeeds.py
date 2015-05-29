@@ -4,6 +4,7 @@ import sys
 import yaml
 import kafkaUtil
 
+
 def load_config():
     with open('config.yml', 'r') as fl:
         cnf = yaml.load(fl)
@@ -24,4 +25,5 @@ if __name__ == '__main__':
             for line in indoc:
                 seed = dict()
                 seed['url'] = INITIAL_URL.format(line.strip())
+                print 'input:', seed
                 producer.produce([json.dumps(seed)])

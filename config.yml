@@ -1,6 +1,6 @@
 kafka:
   address: 172.31.10.154:9092
-  seeds: twitter.top20.seeds
+  seeds: twitter.top20.seeds.1
   pages: twitter.top20.pages
   links: twitter.top20.links
   fails: twitter.top20.fails
