@@ -1,6 +1,6 @@
 kafka:
   address: 172.31.10.154:9092
-  seeds: twitter.top20.seeds.0530
+  seeds: twitter.top20.seeds.0601
   pages: twitter.top20.pages.0601
   links: twitter.top20.links.0601
   fails: twitter.top20.fails.0601
@@ -8,4 +8,4 @@ kafka:
 
 seed_list: top20_account.txt
 
-zookeeper: 172.31.24.55:2181
+zookeeper: 172.31.24.55:2181,172.31.45.93:2181,172.31.4.157:2181
