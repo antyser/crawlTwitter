@@ -27,7 +27,7 @@ def consume(kafka_host, cfg):
         print "input:", msg.offset, msg.value
         seed = json.loads(msg.value)
         process(seed, producer, cfg)
-        time.sleep(2)
+        #time.sleep(1)
 
 def produce(data, producer):
     try:

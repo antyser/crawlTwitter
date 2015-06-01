@@ -4,7 +4,7 @@ kafka:
   pages: twitter.top20.pages.0530
   links: twitter.top20.links.0530
   fails: twitter.top20.fails.0530
-  consume_group: fetcher1
+  consume_group: fetcher
 
 seed_list: top20_account.txt
 

@@ -57,13 +57,13 @@ def process(data, producers, cfg):
             output['score'] = 1
             output['download_timestamp'] = data['download_timestamp']
             produce(json.dumps(output), producers['links'])
-            time.sleep(2)
+            time.sleep(1)
     except Exception as err:
         logging.error(err)
 
 
 def consume(kafka_host, cfg):
-    consumer = kafkaUtil.create_consumer(kafka_host, cfg['zookeeper'], cfg['kafka']['pages'], 'fetcher')
+    consumer = kafkaUtil.create_consumer(kafka_host, cfg['zookeeper'], cfg['kafka']['pages'], cfg['kafka']['consume_group'])
     link_producer = kafkaUtil.create_producer(kafka_host, cfg['kafka']['links'])
     page_producer = kafkaUtil.create_producer(kafka_host, cfg['kafka']['pages'])
     producers = {'links': link_producer, 'pages': page_producer}
