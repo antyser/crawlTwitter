@@ -82,4 +82,8 @@ if __name__ == '__main__':
     if len(sys.argv) == 2:
         kafka_host = sys.argv[1]
     cfg = load_config()
-    consume(kafka_host, cfg)
+    while True:
+        try:
+            consume(kafka_host, cfg)
+        except Exception as err:
+            logging.error(err)
