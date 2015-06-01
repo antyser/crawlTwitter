@@ -17,7 +17,7 @@ def load_config():
 
 
 def consume(kafka_host, cfg):
-    consumer = kafkaUtil.create_consumer(kafka_host, cfg['zookeeper'], cfg['kafka']['seeds'], 'fetcher')
+    consumer = kafkaUtil.create_consumer(kafka_host, cfg['zookeeper'], cfg['kafka']['seeds'], cfg['kafka']['consume_group'])
     producer = kafkaUtil.create_producer(kafka_host, cfg['kafka']['pages'])
     print "start consuming"
     while True:
