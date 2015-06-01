@@ -16,6 +16,7 @@ def create_consumer(kafka_host, zookeeper_host, topic, consumer_group):
         consumer_group=consumer_group,
         auto_commit_enable=True,
         zookeeper_connect=zookeeper_host,
-        fetch_message_max_bytes=20*1024*1024
+        fetch_message_max_bytes=20*1024*1024,
+        queued_max_messages=10
     )
     return consumer
