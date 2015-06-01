@@ -57,6 +57,7 @@ def process(data, producers, cfg):
             output['score'] = 1
             output['download_timestamp'] = data['download_timestamp']
             produce(json.dumps(output), producers['links'])
+            time.sleep(2)
     except Exception as err:
         logging.error(err)
 
@@ -72,7 +73,7 @@ def consume(kafka_host, cfg):
             continue
         page = json.loads(msg.value)
         process(page, producers, cfg)
-        time.sleep(2)
+
 
 
 if __name__ == '__main__':
