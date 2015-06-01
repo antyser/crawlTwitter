@@ -1,7 +1,7 @@
 __author__ = 'junliu'
 import json
 import logging
-import sys
+import sys, os
 from lxml import html
 from urlparse import urlparse
 import time, requests
@@ -13,7 +13,7 @@ QUERY_URL = "http://api.longurl.org/v2/expand?format=json&url="
 
 
 def load_config():
-    with open('config.yml', 'r') as fl:
+    with open(os.path.join(sys.path[0], 'config.yml'), 'r') as fl:
         cnf = yaml.load(fl)
         return cnf
 

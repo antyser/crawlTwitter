@@ -5,15 +5,16 @@ import httplib
 import time
 import logging
 import json
-import sys
+import sys, os
 import yaml
 import kafkaUtil
 CONTINUE_URL = "https://twitter.com/i/profiles/show/{0}/timeline?contextual_tweet_id={1}&include_available_features=1&include_entities=1&max_position={1}"
 
 def load_config():
-    with open('config.yml', 'r') as fl:
+    with open(os.path.join(sys.path[0], 'config.yml'), 'r') as fl:
         cnf = yaml.load(fl)
         return cnf
+
 
 def consume(kafka_host, cfg):
     consumer = kafkaUtil.create_consumer(kafka_host, cfg['zookeeper'], cfg['kafka']['seeds'], 'fetcher')

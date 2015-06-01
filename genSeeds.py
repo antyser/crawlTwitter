@@ -1,14 +1,15 @@
 __author__ = 'junliu'
 import json
-import sys
+import sys,os
 import yaml
 import kafkaUtil
 
 
 def load_config():
-    with open('config.yml', 'r') as fl:
+    with open(os.path.join(sys.path[0], 'config.yml'), 'r') as fl:
         cnf = yaml.load(fl)
         return cnf
+
 
 
 if __name__ == '__main__':
