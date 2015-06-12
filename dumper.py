@@ -5,7 +5,7 @@ import kafkaUtil
 import json
 
 
-def consume(kafka_host, topic):
+def consume(kafka_host, topic, content):
     consumer = KafkaConsumer(topic,
                              group_id='monitor_test',
                              bootstrap_servers=[kafka_host],
@@ -24,13 +24,17 @@ def consume(kafka_host, topic):
             jsonobj = json.loads(msg.value)
             print jsonobj['ts_fetch']
             print current_timestamp
-            if jsonobj['ts_fetch'] > current_timestamp:
+            if int(jsonobj['ts_fetch']) > current_timestamp:
                 break
-            out.write(msg.value)
-            out.write('\n')
+            if content:
+                out.write(msg.value)
+                out.write('\n')
             counter += 1
         out.write("till " + str(current_timestamp) + " consume " + str(counter))
 
 if __name__ == '__main__':
-    print 'usage: python dumper.py <kafka-host:port> <topic>'
-    consume(sys.argv[1], sys.argv[2])
+    print 'usage: python dumper.py <kafka-host:port> <topic> <need-content>'
+    content = False
+    if len(sys.argv) == 4 and sys.argv[3] == 'y':
+        content = True
+    consume(sys.argv[1], sys.argv[2], content)
