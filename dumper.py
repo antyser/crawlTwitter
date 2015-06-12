@@ -4,11 +4,12 @@ from time import gmtime, strftime
 import kafkaUtil
 import json
 
-def consume(kafka_host, topic, filename):
-    consumer = kafkaUtil.create_consumer(kafka_host, "172.31.24.55:2181", topic, "monitor")
+def consume(kafka_host, topic):
+    consumer = kafkaUtil.create_consumer(kafka_host, "172.31.24.55:2181", topic, "monitor_test")
     current_timestamp = int(time.time())
     counter = 0
-    with open(filename, 'a') as out:
+    filename = topic + "." + str(current_timestamp)
+    with open(filename, 'w') as out:
         while True:
             msg = consumer.consume()
             if msg is None:
@@ -23,5 +24,5 @@ def consume(kafka_host, topic, filename):
 
 
 if __name__ == '__main__':
-    print 'usage: python dumper.py <kafka-host:port> <topic> <filename>'
-    consume(sys.argv[1], sys.argv[2], sys.argv[3])
+    print 'usage: python dumper.py <kafka-host:port> <topic>'
+    consume(sys.argv[1], sys.argv[2])
