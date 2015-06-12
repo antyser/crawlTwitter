@@ -12,18 +12,16 @@ def consume(kafka_host, topic):
                              auto_commit_enable=True,
                              auto_commit_interval_ms=1000,
                              auto_offset_reset='smallest',
-                             fetch_message_max_bytes=20 * 1024 * 1024,
-                             queued_max_messages=1,
+                             fetch_message_max_bytes=20 * 1024 * 1024
                              )
     current_timestamp = int(time.time())
     counter = 0
     filename = topic + "." + str(current_timestamp)
     with open(filename, 'w') as out:
-        while True:
-            msg = consumer.consume()
+        for msg in consumer:
             if msg is None:
                 continue
-            jsonobj = json.loads(msg)
+            jsonobj = json.loads(msg.value)
             if jsonobj['ts_fetch'] > current_timestamp:
                 break
             out.write(msg.value)
