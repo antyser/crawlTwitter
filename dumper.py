@@ -22,12 +22,14 @@ def consume(kafka_host, topic):
             if msg is None:
                 continue
             jsonobj = json.loads(msg.value)
+            print jsonobj['ts_fetch']
+            print current_timestamp
             if jsonobj['ts_fetch'] > current_timestamp:
                 break
             out.write(msg.value)
             out.write('\n')
             counter += 1
-        out.write("till " + str(current_timestamp), "consume " + str(counter))
+        out.write("till " + str(current_timestamp) + " consume " + str(counter))
 
 if __name__ == '__main__':
     print 'usage: python dumper.py <kafka-host:port> <topic>'
