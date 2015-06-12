@@ -1,11 +1,20 @@
 __author__ = 'junliu'
 import time, sys
-from time import gmtime, strftime
+from kafka import KafkaConsumer
 import kafkaUtil
 import json
 
+
 def consume(kafka_host, topic):
-    consumer = kafkaUtil.create_consumer(kafka_host, "172.31.24.55:2181", topic, "monitor_test")
+    consumer = KafkaConsumer(topic,
+                             group_id='monitor_test',
+                             bootstrap_servers=[kafka_host],
+                             auto_commit_enable=True,
+                             auto_commit_interval_ms=1000,
+                             auto_offset_reset='smallest',
+                             fetch_message_max_bytes=20 * 1024 * 1024,
+                             queued_max_messages=1,
+                             )
     current_timestamp = int(time.time())
     counter = 0
     filename = topic + "." + str(current_timestamp)
@@ -21,7 +30,6 @@ def consume(kafka_host, topic):
             out.write('\n')
             counter += 1
         out.write("till " + str(current_timestamp), "consume " + str(counter))
-
 
 if __name__ == '__main__':
     print 'usage: python dumper.py <kafka-host:port> <topic>'
