@@ -25,7 +25,7 @@ def fetchUrl(url, producer):
 def fetchFrom(kafka_host):
     kafka = KafkaClient(kafka_host)
     consumer = SimpleConsumer(kafka, 'tmp', 'topsite.pages')
-    producer = SimpleProducer(kafka)
+    producer = SimpleProducer(kafka, fetch_message_max_bytes=20 * 1024 * 1024, codec='gzip')
 
     for msg in consumer:
         obj = json.loads(msg.message.value)
